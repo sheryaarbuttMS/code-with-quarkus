@@ -47,8 +47,8 @@ resource "azurerm_app_service_plan" "application" {
   }
 
   sku {
-    tier = "Basic"
-    size = "B1"
+    tier = "Free"
+    size = "F1"
   }
 }
 
@@ -72,9 +72,10 @@ resource "azurerm_app_service" "application" {
   }
 
   site_config {
-    linux_fx_version = "DOCKER|${azurerm_container_registry.container-registry.name}.azurecr.io/${var.application_name}/${var.application_name}:latest"
-    always_on        = true
-    ftps_state       = "FtpsOnly"
+    linux_fx_version          = "DOCKER|${azurerm_container_registry.container-registry.name}.azurecr.io/${var.application_name}/${var.application_name}:latest"
+    always_on                 = false
+    use_32_bit_worker_process = true
+    ftps_state                = "FtpsOnly"
   }
 
   app_settings = {
@@ -85,5 +86,7 @@ resource "azurerm_app_service" "application" {
     "WEBSITES_PORT"                       = "8080"
 
     # These are app specific environment variables
+    "QUARKUS_HTTP_PORT" = 8080
+    "QUARKUS_PROFILE"   = "prod"
   }
 }
