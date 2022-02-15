@@ -13,7 +13,7 @@ on:
       - 'env-*'
 
 jobs:
-  build-and-deploy:
+  manage-infrastructure:
     runs-on: ubuntu-20.04
     steps:
       - name: Apply Terraform configuration
@@ -21,7 +21,19 @@ jobs:
         with:
           azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
           tf_storage_account: ${{ secrets.TF_STORAGE_ACCOUNT }}
-      - name: Build and deploy a Docker image of a Quarkus native project
-        uses: microsoft/nubesgen-actions/gitops-build-and-deploy-to-app-service-docker-quarkus-native@v0.4.4
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Build a Java project using Maven
+        uses: microsoft/nubesgen-actions/gitops-build-java-maven@v0.4.4
+        with:
+          build_command: mvn package -Pprod,azure -Dquarkus.package.type=uber-jar
+          package_path: ${{ github.workspace }}/target/*.[j,w]ar
+  deploy:
+    needs: [manage-infrastructure, build]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Deploy a Java application to Azure App Service
+        uses: microsoft/nubesgen-actions/gitops-deploy-to-app-service-java@v0.4.4
         with:
           azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
